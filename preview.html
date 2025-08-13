@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Preview - Upload Test Images</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #333;
+            background: #f8f9fa;
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #f0f8f0;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .position-selector {
+            margin-top: 20px;
+        }
+
+        .position-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .position-option {
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .position-option:hover {
+            border-color: #333;
+        }
+
+        .position-option.selected {
+            border-color: #28a745;
+            background: #f0f8f0;
+        }
+
+        .position-preview {
+            width: 100%;
+            height: 80px;
+            background: #f1f3f4;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .position-preview::after {
+            content: '';
+            position: absolute;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .pos-large-left::after { width: 70%; height: 90%; top: 5%; left: 5%; }
+        .pos-medium-right::after { width: 45%; height: 70%; top: 15%; right: 5%; }
+        .pos-small-square::after { width: 35%; height: 60%; top: 20%; left: 5%; }
+        .pos-wide-banner::after { width: 90%; height: 40%; top: 30%; left: 5%; }
+
+        .position-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .preview-gallery {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: 100px;
+            gap: 15px;
+            min-height: 600px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .preview-item {
+            background: #333;
+            border-radius: 0;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .preview-item:hover {
+            transform: scale(1.02);
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+        }
+
+        .preview-item:hover .remove-btn {
+            display: block;
+        }
+
+        /* Position classes */
+        .large-left { grid-column: 1 / 8; grid-row: span 6; }
+        .medium-right { grid-column: 8 / 13; grid-row: span 4; }
+        .small-square { grid-column: 1 / 4; grid-row: span 3; }
+        .wide-banner { grid-column: 1 / 13; grid-row: span 3; }
+
+        .uploaded-list {
+            margin-top: 20px;
+        }
+
+        .uploaded-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .uploaded-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        .uploaded-info {
+            flex: 1;
+        }
+
+        .uploaded-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .uploaded-size {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .code-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .preview-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .preview-link:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Quick Preview System</h1>
+            <p>Upload 3-4 test images to see them instantly on your portfolio site</p>
+        </div>
+
+        <div class="upload-section">
+            <h2 style="margin-bottom: 20px;">Step 1: Upload Test Images</h2>
+            
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Drop images here or click to upload</div>
+                <div class="upload-subtext">JPG, PNG • Max 5MB each • Upload 3-4 test images</div>
+            </div>
+
+            <div class="position-selector">
+                <h3 style="margin-bottom: 15px;">Choose Position for Each Image:</h3>
+                <div class="position-grid">
+                    <div class="position-option" data-position="large-left">
+                        <div class="position-preview pos-large-left"></div>
+                        <div class="position-name">Large Left</div>
+                    </div>
+                    <div class="position-option" data-position="medium-right">
+                        <div class="position-preview pos-medium-right"></div>
+                        <div class="position-name">Medium Right</div>
+                    </div>
+                    <div class="position-option" data-position="small-square">
+                        <div class="position-preview pos-small-square"></div>
+                        <div class="position-name">Small Square</div>
+                    </div>
+                    <div class="position-option" data-position="wide-banner">
+                        <div class="position-preview pos-wide-banner"></div>
+                        <div class="position-name">Wide Banner</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="uploaded-list" id="uploaded-list"></div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="generate-code">Generate Preview Code</button>
+                <button class="btn btn-secondary" id="clear-all">Clear All</button>
+            </div>
+        </div>
+
+        <div class="preview-gallery">
+            <h2 style="margin-bottom: 20px;">Step 2: Preview Your Layout</h2>
+            <div class="preview-grid" id="preview-grid">
+                <div style="grid-column: 1 / 13; grid-row: 1; background: #dee2e6; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
+                    Your uploaded images will appear here with chosen positions
+                </div>
+            </div>
+        </div>
+
+        <div id="code-section" style="display: none;">
+            <div class="upload-section">
+                <h2>Step 3: Copy This Code to Your Site</h2>
+                <p style="margin-bottom: 15px; color: #666;">Copy the HTML below and replace the placeholder images in your portfolio:</p>
+                <div class="code-output" id="generated-code"></div>
+                <a href="https://johntsiavis.github.io/john-tsiavis-portfolio/" target="_blank" class="preview-link">
+                    View Your Live Site →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class QuickPreview {
+            constructor() {
+                this.uploadedImages = [];
+                this.selectedPosition = 'large-left';
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.selectPosition('large-left');
+            }
+
+            bindEvents() {
+                const uploadArea = document.getElementById('upload-area');
+                const fileInput = this.createFileInput();
+
+                // Upload area click
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                // Drag and drop
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    this.handleFiles(e.dataTransfer.files);
+                });
+
+                // File input change
+                fileInput.addEventListener('change', (e) => {
+                    this.handleFiles(e.target.files);
+                });
+
+                // Position selection
+                document.querySelectorAll('.position-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        this.selectPosition(option.dataset.position);
+                    });
+                });
+
+                // Buttons
+                document.getElementById('generate-code').addEventListener('click', () => {
+                    this.generateCode();
+                });
+
+                document.getElementById('clear-all').addEventListener('click', () => {
+                    this.clearAll();
+                });
+            }
+
+            createFileInput() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.accept = 'image/*';
+                input.style.display = 'none';
+                document.body.appendChild(input);
+                return input;
+            }
+
+            selectPosition(position) {
+                document.querySelectorAll('.position-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                document.querySelector(`[data-position="${position}"]`).classList.add('selected');
+                this.selectedPosition = position;
+            }
+
+            handleFiles(files) {
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        this.processImage(file);
+                    }
+                });
+            }
+
+            processImage(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageData = {
+                        name: file.name,
+                        size: this.formatFileSize(file.size),
+                        data: e.target.result,
+                        position: this.selectedPosition,
+                        id: Date.now() + Math.random()
+                    };
+
+                    this.uploadedImages.push(imageData);
+                    this.updateUI();
+                };
+                reader.readAsDataURL(file);
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            updateUI() {
+                this.updateUploadedList();
+                this.updatePreviewGrid();
+            }
+
+            updateUploadedList() {
+                const list = document.getElementById('uploaded-list');
+                list.innerHTML = '';
+
+                if (this.uploadedImages.length === 0) return;
+
+                const title = document.createElement('h3');
+                title.textContent = 'Uploaded Images:';
+                title.style.marginBottom = '15px';
+                list.appendChild(title);
+
+                this.uploadedImages.forEach(image => {
+                    const item = document.createElement('div');
+                    item.className = 'uploaded-item';
+                    item.innerHTML = `
+                        <img src="${image.data}" alt="${image.name}">
+                        <div class="uploaded-info">
+                            <div class="uploaded-name">${image.name}</div>
+                            <div class="uploaded-size">${image.size} • Position: ${image.position}</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="preview.changePosition('${image.id}')">Change Position</button>
+                        <button class="btn" style="background: #dc3545; color: white; margin-left: 10px;" onclick="preview.removeImage('${image.id}')">Remove</button>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+
+            updatePreviewGrid() {
+                const grid = document.getElementById('preview-grid');
+                grid.innerHTML = '';
+
+                if (this.uploadedImages.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / 13; grid-row: 1; background: #dee2e6; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px;">
+                            Your uploaded images will appear here with chosen positions
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.uploadedImages.forEach(image => {
+                    const item = document.createElement('div');
+                    item.className = `preview-item ${image.position}`;
+                    item.innerHTML = `
+                        <img src="${image.data}" alt="${image.name}">
+                        <button class="remove-btn" onclick="preview.removeImage('${image.id}')">×</button>
+                    `;
+                    grid.appendChild(item);
+                });
+            }
+
+            changePosition(imageId) {
+                const image = this.uploadedImages.find(img => img.id == imageId);
+                if (image) {
+                    // Cycle through positions
+                    const positions = ['large-left', 'medium-right', 'small-square', 'wide-banner'];
+                    const currentIndex = positions.indexOf(image.position);
+                    const nextIndex = (currentIndex + 1) % positions.length;
+                    image.position = positions[nextIndex];
+                    this.updateUI();
+                }
+            }
+
+            removeImage(imageId) {
+                this.uploadedImages = this.uploadedImages.filter(img => img.id != imageId);
+                this.updateUI();
+            }
+
+            clearAll() {
+                this.uploadedImages = [];
+                this.updateUI();
+                document.getElementById('code-section').style.display = 'none';
+            }
+
+            generateCode() {
+                if (this.uploadedImages.length === 0) {
+                    alert('Please upload some images first!');
+                    return;
+                }
+
+                let htmlCode = '';
+                this.uploadedImages.forEach((image, index) => {
+                    const positionClass = this.getPositionClass(image.position);
+                    htmlCode += `<div class="gallery-item ${positionClass}" data-image="${image.name}" data-caption="Test image ${index + 1}">
+    <img src="images/portraits/${image.name}" alt="${image.name}">
+</div>\n\n`;
+                });
+
+                document.getElementById('generated-code').textContent = htmlCode;
+                document.getElementById('code-section').style.display = 'block';
+
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-message';
+                successMsg.textContent = '✅ Code generated! Copy the HTML below and paste it into your portfolio site.';
+                document.getElementById('code-section').insertBefore(successMsg, document.getElementById('code-section').firstChild);
+
+                setTimeout(() => successMsg.remove(), 5000);
+            }
+
+            getPositionClass(position) {
+                const mapping = {
+                    'large-left': 'pos-large-left',
+                    'medium-right': 'pos-medium-right', 
+                    'small-square': 'pos-small-1',
+                    'wide-banner': 'pos-wide'
+                };
+                return mapping[position] || 'pos-large-left';
+            }
+        }
+
+        // Initialize
+        const preview = new QuickPreview();
+    </script>
+</body>
+</html>
